@@ -3,17 +3,24 @@ import pandas as pd
 import yaafelib
 
 
-YAAFE_FEATURES = \
-    {'Chroma': 'Chroma',
-     'LPC': 'LPC',
-     'LSF': 'LSF',
-     'MFCC': 'MFCC',
-     'OBSI': 'OBSI',
-     'SpectralCrestFactorPerBand': 'Crest factors',
-     'SpectralFlatness': 'Flatness',
-     'SpectralFlux': 'Flux',
-     'SpectralRolloff': 'Rolloff',
-     'SpectralVariation': 'Variation'}
+YAAFE_FEATURES = {
+    'Chroma': 'Chroma',
+    'LPC': 'Linear Predictor Coefficients',
+    'LSF': 'Line Spectral Frequency',
+    'MFCC': 'Mel-frequency cepstral coefficients',
+    'OBSI': 'Octave band signal intensity with triangular filter',
+    'PerceptualSharpness': 'Perceptual sharpness',
+    'PerceptualSpread': 'Perceptual spread',
+    'SpectralCrestFactorPerBand': 'Spectral crest factors',
+    'SpectralIrregularity': 'Spectral irregularity',
+    'SpectralDecrease': 'Spectral decrease',
+    'SpectralFlatness': 'Spectral flatness',
+    'SpectralFlux': 'Spectral flux',
+    'SpectralRolloff': 'Spectral rolloff',
+    'SpectralVariation': 'Spectral variation',
+    'SpectralSlope': 'Spectral slope',
+    'ZCR': 'Zero-crossing rate'
+}
 
 class YaafeWrapper(object):
 
@@ -27,12 +34,16 @@ class YaafeWrapper(object):
             'LSF': f'LSF blockSize={block_size}  stepSize={step_size}',
             'MFCC': f'MFCC CepsIgnoreFirstCoeff=1  CepsNbCoeffs=13  FFTWindow=Hanning  MelMaxFreq=6000.0  MelMinFreq=400.0  MelNbFilters=40  blockSize={block_size}  stepSize={step_size}',
             'OBSI': f'OBSI FFTLength=0  FFTWindow=Hanning  OBSIMinFreq=27.5  blockSize={block_size}  stepSize={step_size}',
+            'PerceptualSharpness': f'PerceptualSharpness blockSize={block_size}  stepSize={step_size}',
+            'PerceptualSpread': f'PerceptualSpread blockSize={block_size}  stepSize={step_size}',
             'SpectralCrestFactorPerBand': f'SpectralCrestFactorPerBand FFTLength=0  FFTWindow=Hanning  blockSize={block_size}  stepSize={step_size}',
+            'SpectralIrregularity': f'SpectralIrregularity CQTBinsPerOctave=36  CQTMinFreq=73.42  CQTNbOctaves=3  stepSize={step_size}',
             'SpectralDecrease': f'SpectralDecrease FFTLength=0  FFTWindow=Hanning  blockSize={block_size}  stepSize={step_size}',
             'SpectralFlatness': f'SpectralFlatness FFTLength=0  FFTWindow=Hanning  blockSize={block_size}  stepSize={step_size}',
             'SpectralFlux': f'SpectralFlux FFTLength=0  FFTWindow=Hanning  FluxSupport=All  blockSize={block_size}  stepSize={step_size}',
             'SpectralRolloff': f'SpectralRolloff FFTLength=0  FFTWindow=Hanning  blockSize={block_size}  stepSize={step_size}',
             'SpectralVariation': f'SpectralVariation FFTLength=0  FFTWindow=Hanning  blockSize={block_size}  stepSize={step_size}',
+            'SpectralSlope': f'SpectralSlope blockSize={block_size}  stepSize={step_size}',
             'ZCR': f'ZCR blockSize={block_size}  stepSize={step_size}'
         }
 
