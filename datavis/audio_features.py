@@ -1,11 +1,11 @@
 import os
 import configparser
-import glob
 import logging
 import librosa
 import pandas as pd
-from joblib import Parallel, delayed, cpu_count
+from joblib import Parallel, delayed
 from datavis.yaafe_wrapper import YaafeWrapper, YAAFE_FEATURES
+from datavis.audio_io import get_all_waves
 
 
 def process_audio(path, block_size, selected_features):
@@ -21,8 +21,7 @@ def process_audio(path, block_size, selected_features):
 
 def wav_dir_to_features(directory: str, config: str, n_jobs: int) -> pd.DataFrame:
     selected_features, block_size = _get_params(config)
-    files = glob.glob(directory + '/**/*.wav')
-    files.sort()
+    files = get_all_waves(directory=directory)
 
     if n_jobs == 1:
         features = [process_audio(path, block_size=block_size, selected_features=selected_features)
