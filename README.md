@@ -74,6 +74,27 @@ vector elements from the computed matrix.
 
 Number of calculated features is expressed by the dimension on `axis=1` (i.e. `179`).
 
+### Features to Image
+
+```bash
+Usage: viscli.py f2i [OPTIONS]
+
+  HDF5 features to image
+
+Options:
+  -in, --input PATH               Path to a file with HDF5 features.
+                                  [required]
+  -d, --directory PATH            Path to the directory with audio files that
+                                  were used to produce features. Datatime will
+                                  be inferred from timestamps.  [required]
+  -out, --output TEXT             Output file.  [required]
+  -f, --format [html|png|webp|svg|pdf|eps]
+                                  [default: html]
+  --help                          Show this message and exit.
+```
+
+HTML allows interactive use of the plot. 
+
 
 ## Audio features
 
