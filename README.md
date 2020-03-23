@@ -1,5 +1,13 @@
 # Visualisation of long-duration audio features
 
+- [Development env](#development-env)
+- [CLI](#cli)
+  * [Audio to Features](#audio-to-features)
+  * [Features to Image](#features-to-image)
+- [Audio features](#audio-features)
+  * [YAAFE set](#yaafe-set)
+- [Handy commands](#handy-commands)
+
 ## Development env
 
 Use Anaconda for the best experience:
