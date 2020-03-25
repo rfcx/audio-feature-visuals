@@ -106,9 +106,11 @@ HTML allows interactive use of the plot.
 
 ## Audio features
 
+Initial set of features that will be modified later.
+
 ### YAAFE set
 
-Initial set of features that will be modified later. 
+Number of basic audio features are computed via [YAAFE](https://github.com/Yaafe/Yaafe) library. Features are explained in [docs](http://yaafe.sourceforge.net/features.html).
 
 * Chroma
 * Linear Predictor Coefficients
