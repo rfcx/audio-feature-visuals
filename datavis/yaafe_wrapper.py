@@ -70,8 +70,6 @@ class YaafeWrapper(object):
                 df = pd.DataFrame(array, columns=[name])
             else:
                 column_names = [f'{name}.{idx}' for idx in range(array.shape[1])]
-                if name == 'Chroma':
-                    array = 10 * np.log10(array)
                 df = pd.DataFrame(array, columns=column_names)
             dfs.append(df)
         dfs = pd.concat(dfs, axis=1)
