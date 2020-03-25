@@ -44,11 +44,11 @@ def process(input, output, jobs, config):
               show_default=True)
 def process(input, directory, output, format):
     df = pd.read_hdf(input, key='data')
-    df = (df - df.min()) / (df.max() - df.min())
     daterange = get_date_range_from_directory(directory=directory, periods=len(df))
     df['datetime'] = daterange
     df = df.set_index('datetime')
     df = df.resample('1T').mean()
+    df = (df - df.min()) / (df.max() - df.min())
     save_heatmap_with_datetime(df, output_path=output, dformat=format)
 
 
