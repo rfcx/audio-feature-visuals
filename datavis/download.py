@@ -28,7 +28,7 @@ def download(url, filename):
     except Exception:
         logging.exception('Failed to download %s to %s', url, filename)
         with open('failed.log', 'a') as flog:
-            flog.write('%s,%s'.format(url, filename))
+            flog.write('{},{}'.format(url, filename))
 
 
 @click.command(help='Helper CLI to download files. Currently works with a rather special structure defined by shell script provided by Topher')
