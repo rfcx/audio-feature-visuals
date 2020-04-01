@@ -5,11 +5,21 @@ import sys
 import click
 import requests
 import logging
+import backoff
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
 
-logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
+@click.group()
+@click.option('--verbose', default=False, is_flag=True, help='Run in a silent mode')
+def cli(verbose):
+    """
+    Helper script to download audio files
+    """
+    if verbose:
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 
 def clean(download_str: str):
@@ -19,23 +29,35 @@ def clean(download_str: str):
     return link, output
 
 
-def download(url, filename):
+def url_to_file(url, filename, log_failed=True):
     try:
-        request = requests.get(url=url, timeout=10, stream=True)
-        with open(filename, 'wb') as fh:
-            for chunk in request.iter_content(1024 * 1024):
-                fh.write(chunk)
+        download(url, filename)
+        logging.debug('%s downloaded successfully to %', url, filename)
     except Exception:
         logging.exception('Failed to download %s to %s', url, filename)
-        with open('failed.log', 'a') as flog:
-            flog.write('{},{}'.format(url, filename))
+        if log_failed:
+            with open('failed.log', 'a') as flog:
+                flog.write('{},{}\n'.format(url, filename))
 
 
-@click.command(help='Helper CLI to download files. Currently works with a rather special structure defined by shell script provided by Topher')
+@backoff.on_exception(backoff.expo,
+                      (requests.exceptions.Timeout,
+                       requests.exceptions.ConnectionError),
+                      max_time=60)
+def download(url, filename):
+    with requests.get(url=url, timeout=30, stream=True) as request:
+        request.raise_for_status()
+        with open(filename, 'wb') as fh:
+            for chunk in request.iter_content(1024 * 1024):
+                if chunk:
+                    fh.write(chunk)
+
+
+@cli.command('file', help='Helper CLI to download files. Currently works with a rather special structure defined by shell script provided by Topher')
 @click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to a directory with audio in WAV format.")
 @click.option("--output", "-out", type=click.Path(exists=False, file_okay=False, writable=True), required=True, help="Output directory.")
 @click.option("--jobs", "-j", type=click.INT, default=8, help="Number of threads to run.", show_default=True)
-def cli(input, output, jobs):
+def file_download(input, output, jobs):
     with open(input, 'r') as fin:
         files_to_download = fin.read().splitlines()
 
@@ -44,8 +66,22 @@ def cli(input, output, jobs):
     files_to_download = [clean(s) for s in files_to_download]
 
     _ = Parallel(n_jobs=jobs, backend='threading')(
-        delayed(download)(url=url, filename=os.path.join(output, filename))
+        delayed(url_to_file)(url=url, filename=os.path.join(output, filename))
         for url, filename in tqdm(files_to_download))
+
+
+@cli.command('resume', help='Resume failed downloads')
+@click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to a directory with audio in WAV format.", default='failed.log')
+def resume(input):
+    logging.getLogger('backoff').addHandler(logging.StreamHandler())
+
+    with open(input, 'r') as fin:
+        files_to_download = fin.read().splitlines()
+
+    files_to_download = [s.split(',') for s in files_to_download]
+
+    for url, filepath in tqdm(files_to_download):
+        url_to_file(url, filepath, log_failed=False)
 
 
 if __name__ == '__main__':
