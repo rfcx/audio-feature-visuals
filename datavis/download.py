@@ -14,7 +14,9 @@ from joblib import Parallel, delayed
 @click.option('--verbose', default=False, is_flag=True, help='Run in a silent mode')
 def cli(verbose):
     """
-    Helper script to download audio files
+    Helper script to download audio files from Topher. Adjust "clean" method if format changes.
+    Example of what the script expects:
+    curl -o ./2019-09-26T12-56-23.230Z.wav https://assets.rfcx.org/audio/8719aa78-7562-4f8c-af6f-3a5d985de507.wav;
     """
     if verbose:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
