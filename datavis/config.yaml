@@ -1,0 +1,44 @@
+Features:
+  Acoustic_Complexity_Index:
+    use: off
+    params:
+      bin: 5
+    spectrogram:
+      win_len: 512
+      hop: 512
+      win_type: hamming
+
+  Acoustic_Diversity_Index:
+    use: on
+    params:
+      fs_max: 10000
+      db_threshold: -50
+      fs_step: 1000
+
+  Acoustic_Evenness_Index:
+    use: on
+    params:
+      fs_max: 10000
+      db_threshold: -50
+      fs_step: 1000
+
+  Bioacoustic_Index:
+    use: on
+    params:
+      fs_min: 2000
+      fs_max: 8000
+    spectrogram:
+      win_len: 512
+      hop: 256
+      win_type: hanning
+
+  Spectral_entropy:
+    use: on
+    spectrogram:
+      win_len: 512
+      hop: 256
+      win_type: hanning
+
+  Temporal_entropy:
+    use: on
+
