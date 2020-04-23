@@ -42,3 +42,18 @@ Features:
   Temporal_entropy:
     use: on
 
+  Spectral_centroid:
+    spectrogram:
+      win_len: 512
+      hop: 256
+      win_type: hanning
+
+  Acoustic_activity:
+    params:
+      frame_len: 512
+      hist_smoothing_kernel: 4
+      hist_number_bins: 100
+      activity_threshold_dB: 3
+      min_dB: -60
+      dB_range: 10
+      N: 0

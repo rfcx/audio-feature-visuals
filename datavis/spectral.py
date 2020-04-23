@@ -2,17 +2,12 @@ import numpy as np
 from cachetools.keys import hashkey
 from cachetools import LRUCache, cached
 from scipy import signal, fftpack
+from datavis.common import strided_array
 
 
 def speckey(sig, *args, **kwargs):
     key = hashkey(*args, **kwargs)
     return key
-
-
-def strided_array(arr, win_len, step):  # Window len = L, Stride len/stepsize = S
-    nrows = ((arr.size - win_len) // step) + 1
-    n = arr.strides[0]
-    return np.lib.stride_tricks.as_strided(arr, shape=(nrows, win_len), strides=(step * n, n))
 
 
 @cached(LRUCache(maxsize=10), key=speckey)

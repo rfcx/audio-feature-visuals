@@ -4,6 +4,7 @@ import numpy as np
 from functools import wraps
 from scipy.stats import entropy
 from datavis import spectral
+from datavis.common import gini, strided_array, moving_average
 
 
 def toggle(f):
@@ -72,6 +73,14 @@ def compute_spectral_entropy(y: np.ndarray, fs: int, config: dict) -> float:
 
 
 def compute_temporal_entropy(y: np.ndarray, fs: int, config: dict) -> float:
+    """
+     temporal entropy (H[t]), a measure of the temporal dispersal of acoustic energy within a recording,
+     has been shown to reflect the number of avian calls in a recording (Sueur, Pavoine et al. 2008).
+    :param y:
+    :param fs:
+    :param config:
+    :return:
+    """
     envelope = spectral.envelope(sig=y)
     envelope /= np.sum(envelope)
     N = len(envelope)
@@ -85,15 +94,64 @@ def compute_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> flo
     fs_step = aei_params['fs_step']
     db_threshold = aei_params['db_threshold']
     spec_segmented = spectral.segmented_spectogram(y=y, fs=fs, fs_step=fs_step, fs_max=fs_max, db_threshold=db_threshold)
-    aei = _gini(spec_segmented)
+    aei = gini(spec_segmented)
     return aei
 
 
-def _gini(x):
-    mad = np.abs(np.subtract.outer(x, x)).mean()
-    rmad = mad / np.mean(x)
-    G = 0.5 * rmad
-    return G
+def compute_spectral_centroid(y: np.ndarray, fs: int, config: dict):
+    spec_params = config['Features']['Spectral_centroid']['spectrogram']
+    spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
+    centroid = freq.dot(spec) / spec.sum(axis=0)
+    return centroid
+
+
+def compute_acoustic_activity(y: np.ndarray, fs: int, config: dict):
+    params = config['Features']['Acoustic_activity']['params']
+
+    duration_s = len(y) / fs
+    wave_env = 20 * np.log10(np.max(np.abs(strided_array(y, params['frame_len'], params['frame_len'])), axis=1))
+    minimum = np.max((np.min(wave_env), params['min_dB']))
+    hist, bin_edges = np.histogram(wave_env, range=(minimum, minimum + params['dB_range']),
+                                   bins=params['hist_number_bins'], density=False)
+    hist_smooth = moving_average(hist, kernel=params['hist_smoothing_kernel'], border='same')
+    modal_intensity = np.argmax(hist_smooth)
+
+    if params['N'] > 0:
+        count_thresh = 0.68 * np.sum(hist_smooth) # 2 standard deviations from the mean (under normal dist)
+        count = hist_smooth[modal_intensity]
+        index_bin = 1
+        while count < count_thresh:
+            if modal_intensity + index_bin <= len(hist_smooth):
+                count = count + hist_smooth[modal_intensity + index_bin]
+            if modal_intensity - index_bin >= 0:
+                count = count + hist_smooth[modal_intensity - index_bin]
+            index_bin += 1
+        thresh = np.min((params['hist_number_bins'], modal_intensity + params['N'] * index_bin))
+        background_noise = bin_edges[thresh]
+    else:
+        background_noise = bin_edges[modal_intensity]
+
+    SNR = np.max(wave_env) - background_noise
+    SN = wave_env - background_noise - params['activity_threshold_dB']
+    acoustic_activity = (SN > 0).sum() / float(len(SN))
+
+    start_event = [n[0] for n in np.argwhere((SN[:-1] < 0) & (SN[1:] > 0))]
+    end_event = [n[0] for n in np.argwhere((SN[:-1] > 0) & (SN[1:] < 0))]
+    if len(start_event) != 0 and len(end_event) != 0:
+        if start_event[0] < end_event[0]:
+            events = list(zip(start_event, end_event))
+        else:
+            events = list(zip(end_event, start_event))
+        count_acoustic_events = len(events)
+        average_duration_e = np.mean([end - begin for begin, end in events])
+        average_duration_s = average_duration_e * duration_s / float(len(SN))
+    else:
+        count_acoustic_events = 0
+        average_duration_s = 0
+
+    d = {'SNR': SNR, 'Acoustic_activity': acoustic_activity, 'Count_acoustic_events': count_acoustic_events,
+         'Average_duration': average_duration_s}
+    return d
 
 
 if __name__ == '__main__':
@@ -110,12 +168,14 @@ if __name__ == '__main__':
     SE = compute_spectral_entropy(y=sample, fs=fs, config=config)
     TE = compute_temporal_entropy(y=sample, fs=fs, config=config)
     AEI = compute_acoustic_evenness_index(y=sample, fs=fs, config=config)
+    AE = compute_acoustic_activity(y=sample, fs=fs, config=config)
     print(f'Acoustic Diversity Index:: {ADI}')
     print(f'Acoustic Complexity Index: {ACI}')
     print(f'Bioacoustic Index: {BI}')
     print(f'Spectral entropy: {SE}')
     print(f'Temporal entropy: {TE}')
     print(f'Acoustic evenness index: {AEI}')
+    print(f'Acoustic activity:\n{AE}')
 
 
 
