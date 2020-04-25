@@ -22,6 +22,174 @@ YAAFE_FEATURES = {
     'ZCR': 'Zero-crossing rate'
 }
 
+class YaafeWrapper3(object):
+
+    def __init__(self, fs: int, config: dict):
+        yaafe_config = {}
+        for feature_name, feature_params in config.items():
+            if feature_params['use']:
+                specs = feature_name + ' ' + str(feature_params['params']).replace("'", '').replace(",", "").replace(": ", "=")[1:-1]
+                yaafe_config[feature_name] = specs
+
+        if yaafe_config:
+            feature_plan = yaafelib.FeaturePlan(sample_rate=fs, normalize=True)
+            for feature_name, setting in yaafe_config.items():
+                feature_plan.addFeature(feature_name + ': ' + setting)
+            data_flow = feature_plan.getDataFlow()
+            self.engine = yaafelib.Engine()
+            self.engine.load(data_flow)
+        else:
+            self.engine = None
+
+    def get_features(self, audio_data: np.ndarray) -> dict:
+        features = self.engine.processAudio(audio_data.reshape(1, -1).astype('float64'))
+        return features
+
+
+class YaafeWrapper2(object):
+
+    def __init__(self, fs: int, config: dict):
+
+        yaafe_config = {}
+
+        chroma = config['Features']['Chroma']
+        LPC = config['Features']['LPC']
+        LSF = config['Features']['LSF']
+        MFCC = config['Features']['MFCC']
+        OBSIR = config['Features']['OBSIR']
+        perceptual_sharpness = config['Features']['PerceptualSharpness']
+        perceptual_spread = config['Features']['PerceptualSpread']
+        spectral_crest = config['Features']['SpectralCrestFactorPerBand']
+        spectral_irregularity = config['Features']['SpectralIrregularity']
+        spectral_decrease = config['Features']['SpectralDecrease']
+
+        spectral_flatness = config['Features']['SpectralFlatness']
+        spectral_flux = config['Features']['SpectralFlux']
+        spectral_rolloff = config['Features']['SpectralRolloff']
+        spectral_variation = config['Features']['SpectralVariation']
+        spectral_slope = config['Features']['SpectralSlope']
+        ZCR = config['Features']['ZCR']
+
+        if chroma['use']:
+            chroma = chroma["params"]
+            yaafe_config['Chroma'] = f'Chroma2 ' \
+                                     f'CQTAlign={chroma["CQTAlign"]} ' \
+                                     f'CQTBinsPerOctave={chroma["CQTBinsPerOctave"]} ' \
+                                     f'CQTMinFreq={chroma["CQTMinFreq"]} ' \
+                                     f'CQTNbOctaves={chroma["CQTNbOctaves"]}  ' \
+                                     f'CZBinsPerSemitone={chroma["CZBinsPerSemitone"]} ' \
+                                     f'CZNbCQTBinsAggregatedToPCPBin={chroma["CZNbCQTBinsAggregatedToPCPBin"]} ' \
+                                     f'CZTuning={chroma["CZTuning"]}  ' \
+                                     f'stepSize={chroma["step_size"]}'
+
+        if LPC['use']:
+            LPC = LPC["params"]
+            yaafe_config['LPC'] = f'LPC LPCNbCoeffs={LPC["LPCNbCoeffs"]} blockSize={LPC["block_size"]} stepSize={LPC["step_size"]}'
+
+        if LSF['use']:
+            LSF = LSF["params"]
+            yaafe_config['LSF'] = f'LSF blockSize={LSF["block_size"]} stepSize={LSF["step_size"]}'
+
+        if MFCC['use']:
+            MFCC = MFCC["params"]
+            yaafe_config['MFCC'] = f'MFCC ' \
+                                   f'CepsIgnoreFirstCoeff={MFCC["CepsIgnoreFirstCoeff"]} ' \
+                                   f'CepsNbCoeffs={MFCC["CepsNbCoeffs"]} ' \
+                                   f'MelMaxFreq={MFCC["MelMaxFreq"]} ' \
+                                   f'MelMinFreq={MFCC["MelMinFreq"]}  ' \
+                                   f'MelNbFilters={MFCC["MelNbFilters"]} ' \
+                                   f'blockSize={MFCC["block_size"]} ' \
+                                   f'stepSize={MFCC["step_size"]} '
+
+        if OBSIR['use']:
+            OBSIR = OBSIR["params"]
+            yaafe_config['OBSIR'] = f'OBSIR OBSIMinFreq={OBSIR["OBSIMinFreq"]} blockSize={OBSIR["block_size"]} ' \
+                                    f'stepSize={OBSIR["step_size"]}'
+
+        if perceptual_sharpness['use']:
+            perceptual_sharpness = perceptual_sharpness["params"]
+            yaafe_config['PerceptualSharpness'] = f'PerceptualSharpness ' \
+                                                  f'blockSize={perceptual_sharpness["block_size"]} ' \
+                                                  f'stepSize={perceptual_sharpness["step_size"]}'
+
+        if perceptual_spread['use']:
+            perceptual_spread = perceptual_spread["params"]
+            yaafe_config['PerceptualSpread'] = f'PerceptualSpread ' \
+                                               f'blockSize={perceptual_spread["block_size"]} ' \
+                                               f'stepSize={perceptual_spread["step_size"]}'
+
+        if spectral_crest['use']:
+            spectral_crest = spectral_crest["params"]
+            yaafe_config['SpectralCrestFactorPerBand'] = f'SpectralCrestFactorPerBand ' \
+                                                         f'blockSize={spectral_crest["block_size"]} ' \
+                                                         f'stepSize={spectral_crest["step_size"]}'
+
+        if spectral_irregularity['use']: # f'SpectralIrregularity CQTBinsPerOctave=36  CQTMinFreq=73.42  CQTNbOctaves=3  stepSize={step_size}',
+            spectral_irregularity = spectral_irregularity["params"]
+            yaafe_config['SpectralIrregularity'] = f'SpectralIrregularity ' \
+                                                   f'CQTBinsPerOctave={spectral_irregularity["CQTBinsPerOctave"]} ' \
+                                                   f'CQTMinFreq={spectral_irregularity["CQTMinFreq"]} ' \
+                                                   f'CQTNbOctaves={spectral_irregularity["CQTNbOctaves"]} ' \
+                                                   f'stepSize={spectral_irregularity["step_size"]}'
+
+        if spectral_decrease['use']:
+            spectral_decrease = spectral_decrease["params"]
+            yaafe_config['PerceptualSpread'] = f'PerceptualSpread ' \
+                                               f'blockSize={spectral_decrease["block_size"]} ' \
+                                               f'stepSize={spectral_decrease["step_size"]}'
+
+        if spectral_flatness['use']:
+            spectral_flatness = spectral_flatness["params"]
+            yaafe_config['SpectralFlatness'] = f'SpectralFlatness ' \
+                                               f'blockSize={spectral_flatness["block_size"]} ' \
+                                               f'stepSize={spectral_flatness["step_size"]}'
+
+        if spectral_flux['use']:
+            spectral_flux = spectral_flux["params"]
+            yaafe_config['SpectralFlux'] = f'SpectralFlux ' \
+                                           f'blockSize={spectral_flux["block_size"]} ' \
+                                           f'stepSize={spectral_flux["step_size"]}'
+
+        if spectral_rolloff['use']:
+            spectral_rolloff = spectral_rolloff["params"]
+            yaafe_config['SpectralRolloff'] = f'SpectralRolloff ' \
+                                              f'blockSize={spectral_rolloff["block_size"]} ' \
+                                              f'stepSize={spectral_rolloff["step_size"]}'
+
+        if spectral_variation['use']:
+            spectral_variation = spectral_variation["params"]
+            yaafe_config['SpectralVariation'] = f'SpectralVariation ' \
+                                                f'blockSize={spectral_variation["block_size"]} ' \
+                                                f'stepSize={spectral_variation["step_size"]}'
+
+        if spectral_slope['use']:
+            spectral_slope = spectral_slope["params"]
+            yaafe_config['SpectralSlope'] = f'SpectralSlope ' \
+                                            f'blockSize={spectral_slope["block_size"]} ' \
+                                            f'stepSize={spectral_slope["step_size"]}'
+
+        if ZCR['use']:
+            ZCR = ZCR["params"]
+            yaafe_config['ZCR'] = f'ZCR ' \
+                                  f'blockSize={ZCR["block_size"]} ' \
+                                  f'stepSize={ZCR["step_size"]}'
+
+        if yaafe_config:
+            feature_plan = yaafelib.FeaturePlan(sample_rate=fs, normalize=True)
+            for feature_name, setting in yaafe_config.items():
+                feature_plan.addFeature(feature_name + ': ' + setting)
+            data_flow = feature_plan.getDataFlow()
+            self.engine = yaafelib.Engine()
+            self.engine.load(data_flow)
+        else:
+            self.engine = None
+
+    def get_features(self, audio_data: np.ndarray) -> dict:
+        features = self.engine.processAudio(audio_data.reshape(1, -1).astype('float64'))
+        return features
+
+
+
 class YaafeWrapper(object):
 
     def __init__(self, fs: int, block_size=1024, step_size=None, selected_features='all'):
