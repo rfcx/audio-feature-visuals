@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaafelib
+from scipy.stats import median_absolute_deviation
 
 
 YAAFE_FEATURES = {
@@ -41,9 +42,27 @@ class YaafeWrapper3(object):
         else:
             self.engine = None
 
-    def get_features(self, audio_data: np.ndarray) -> dict:
+    def compute_features(self, audio_data: np.ndarray) -> dict:
         features = self.engine.processAudio(audio_data.reshape(1, -1).astype('float64'))
         return features
+
+    def compute_feature_stats(self, audio_data: np.ndarray) -> dict:
+        features = self.engine.processAudio(audio_data.reshape(1, -1).astype('float64'))
+
+        flat_dict = {}
+        for name, values in features.items():
+            if values.shape[1] == 1:
+                flat_dict[f'{name}'] = values.mean()
+            else:
+                temporal_mean = values.mean(axis=0)
+                q25, q50, q75 = np.quantile(temporal_mean, [0.25, 0.50, 0.75])
+                flat_dict[name + '_q25'] = q25
+                flat_dict[name + '_q50'] = q50
+                flat_dict[name + '_q75'] = q75
+                flat_dict[name + '_MAD'] = median_absolute_deviation(temporal_mean)
+                flat_dict[name + '_IQR'] = q75 - q25
+
+        return flat_dict
 
 
 class YaafeWrapper2(object):
