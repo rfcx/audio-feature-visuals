@@ -5,21 +5,23 @@ from functools import wraps
 from scipy.stats import entropy
 from datavis import spectral
 from datavis.common import gini, strided_array, moving_average
+from datavis.yaafe_wrapper import YaafeWrapper
 
 
 def toggle(f):
     @wraps(f)
     def wrapper(*args, **kwds):
-        if args[2]['use']:
+        if kwds['config']['use']:
             return f(*args, **kwds)
         else:
             return None
     return wrapper
 
 
+@toggle
 def compute_acoustic_complexity_index(y, fs, config):
-    aci_params = config['Features']['Acoustic_Complexity_Index']['params']
-    spec_params = config['Features']['Acoustic_Complexity_Index']['spectrogram']
+    aci_params = config['params']
+    spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     j_bin = int(aci_params['bin'] * fs / spec_params['hop'])
     full_bins = spec.shape[1] // j_bin
@@ -27,11 +29,12 @@ def compute_acoustic_complexity_index(y, fs, config):
     spec = spec[:, :j_bin * full_bins].reshape(-1, spec.shape[0], j_bin)
     spec_diff = np.sum(np.abs(np.diff(spec)), axis=2)
     aci = np.sum(spec_diff / np.sum(spec, axis=2), axis=1)
-    return aci.sum(), aci
+    return aci.sum()
 
 
+@toggle
 def compute_acoustic_diversity_index(y, fs, config):
-    adi_params = config['Features']['Acoustic_Diversity_Index']['params']
+    adi_params = config['params']
     fs_max = min(adi_params['fs_max'], fs / 2)
     fs_step = adi_params['fs_step']
     db_threshold = adi_params['db_threshold']
@@ -41,9 +44,10 @@ def compute_acoustic_diversity_index(y, fs, config):
     return ADI
 
 
+@toggle
 def compute_bioacoustic_index(y: np.ndarray, fs: int, config: dict):
-    bi_params = config['Features']['Bioacoustic_Index']['params']
-    spec_params = config['Features']['Bioacoustic_Index']['spectrogram']
+    bi_params = config['params']
+    spec_params = config['spectrogram']
     fs_min = bi_params['fs_min']
     fs_max = min(bi_params['fs_max'], fs / 2)
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
@@ -62,8 +66,9 @@ def compute_bioacoustic_index(y: np.ndarray, fs: int, config: dict):
     return BI
 
 
+@toggle
 def compute_spectral_entropy(y: np.ndarray, fs: int, config: dict) -> float:
-    spec_params = config['Features']['Spectral_entropy']['spectrogram']
+    spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     N = spec.shape[0]
     spec_sum = np.sum(spec, axis=1) / np.sum(spec)
@@ -88,8 +93,9 @@ def compute_temporal_entropy(y: np.ndarray, fs: int, config: dict) -> float:
     return temporal_entropy
 
 
+@toggle
 def compute_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> float:
-    aei_params = config['Features']['Acoustic_Evenness_Index']['params']
+    aei_params = config['params']
     fs_max = min(aei_params['fs_max'], fs / 2)
     fs_step = aei_params['fs_step']
     db_threshold = aei_params['db_threshold']
@@ -98,15 +104,17 @@ def compute_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> flo
     return aei
 
 
+@toggle
 def compute_spectral_centroid(y: np.ndarray, fs: int, config: dict):
-    spec_params = config['Features']['Spectral_centroid']['spectrogram']
+    spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     centroid = freq.dot(spec) / spec.sum(axis=0)
     return centroid
 
 
+@toggle
 def compute_acoustic_activity(y: np.ndarray, fs: int, config: dict):
-    params = config['Features']['Acoustic_activity']['params']
+    params = config['params']
 
     duration_s = len(y) / fs
     wave_env = 20 * np.log10(np.max(np.abs(strided_array(y, params['frame_len'], params['frame_len'])), axis=1))
@@ -154,28 +162,39 @@ def compute_acoustic_activity(y: np.ndarray, fs: int, config: dict):
     return d
 
 
+def get_yaafe_features(y: np.ndarray, fs: int, config: dict):
+    yaafe = YaafeWrapper(fs=fs, config=config)
+    features = yaafe.compute_feature_stats(y)
+    return features
+
+
+def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
+    AE = compute_acoustic_activity(y=y, fs=fs, config=config['Acoustic_activity'])
+    bioacoustic_features = {
+        'Acoustic_Complexity_Index': compute_acoustic_complexity_index(y=y, fs=fs, config=config['Acoustic_Complexity_Index']),
+        'Acoustic_Diversity_Index': compute_acoustic_diversity_index(y=y, fs=fs, config=config['Acoustic_Diversity_Index']),
+        'Bioacoustic_Index': compute_bioacoustic_index(y=y, fs=fs, config=config['Bioacoustic_Index']),
+        'Spectral_entropy': compute_spectral_entropy(y=y, fs=fs, config=config['Spectral_entropy']),
+        'Temporal_entropy': compute_temporal_entropy(y=y, fs=fs, config=config['Temporal_entropy']),
+        'Acoustic_Evenness_Index': compute_acoustic_evenness_index(y=y, fs=fs, config=config['Acoustic_Evenness_Index']),
+        'SNR': AE['SNR'],
+        'Acoustic_activity': AE['Acoustic_activity'],
+        'Acoustic_events_count': AE['Count_acoustic_events'],
+        'Event_average_duration': AE['Average_duration']
+    }
+    return bioacoustic_features
+
+
 if __name__ == '__main__':
     yml_file = 'config.yaml'
     with open(yml_file, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     sample_path = '/media/tracek/linux-data/client/rfcx/test/2020-02-25T05-45-06.587Z.wav'
-    # sample_path2 = '/media/tracek/linux-data/client/rfcx/test/2020-02-25T06-07-42.674Z.wav'
     sample, fs = librosa.load(sample_path, sr=None)
-    ACI, temp = compute_acoustic_complexity_index(y=sample, fs=fs, config=config)
-    ADI = compute_acoustic_diversity_index(y=sample, fs=fs, config=config)
-    BI = compute_bioacoustic_index(y=sample, fs=fs, config=config)
-    SE = compute_spectral_entropy(y=sample, fs=fs, config=config)
-    TE = compute_temporal_entropy(y=sample, fs=fs, config=config)
-    AEI = compute_acoustic_evenness_index(y=sample, fs=fs, config=config)
-    AE = compute_acoustic_activity(y=sample, fs=fs, config=config)
-    print(f'Acoustic Diversity Index:: {ADI}')
-    print(f'Acoustic Complexity Index: {ACI}')
-    print(f'Bioacoustic Index: {BI}')
-    print(f'Spectral entropy: {SE}')
-    print(f'Temporal entropy: {TE}')
-    print(f'Acoustic evenness index: {AEI}')
-    print(f'Acoustic activity:\n{AE}')
+    yaafe_features = get_yaafe_features(y=sample, fs=fs, config=config['Audio_features'])
+    bioacoustic_features = get_bioacoustic_features(y=sample, fs=fs, config=config['Bioacoustic_features'])
+
 
 
 

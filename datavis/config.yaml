@@ -1,6 +1,6 @@
-Features:
+Bioacoustic_features:
   Acoustic_Complexity_Index:
-    use: off
+    use: on
     params:
       bin: 5
     spectrogram:
@@ -43,12 +43,14 @@ Features:
     use: on
 
   Spectral_centroid:
+    use: on
     spectrogram:
       win_len: 512
       hop: 256
       win_type: hanning
 
   Acoustic_activity:
+    use: on
     params:
       frame_len: 512
       hist_smoothing_kernel: 4
@@ -57,3 +59,122 @@ Features:
       min_dB: -60
       dB_range: 10
       N: 0
+
+Audio_features:
+  Chroma2:
+    use: on
+    params:
+      stepSize: 1024
+      CQTAlign: c
+      CQTBinsPerOctave: 48
+      CQTMinFreq: 27.5
+      CQTNbOctaves: 7
+      CZBinsPerSemitone: 1
+      CZNbCQTBinsAggregatedToPCPBin: -1
+      CZTuning: 440
+
+  LPC:
+    use: off
+    params:
+      LPCNbCoeffs: 2
+      blockSize: 1024
+      stepSize: 1024
+
+  LSF:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  MFCC:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+      CepsIgnoreFirstCoeff: 1
+      CepsNbCoeffs: 13
+      MelMaxFreq: 6000
+      MelMinFreq: 100
+      MelNbFilters: 40
+
+  OBSIR:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+      OBSIMinFreq: 27.5
+
+  PerceptualSharpness:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  PerceptualSpread:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralCrestFactorPerBand:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralIrregularity:
+    use: off
+    params:
+      CQTBinsPerOctave: 36
+      CQTMinFreq: 73.42
+      CQTNbOctaves: 3
+      stepSize: 1024
+
+  SpectralDecrease:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralFlatness:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralFlux:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralRolloff:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralVariation:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  SpectralSlope:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  ZCR:
+    use: on
+    params:
+      blockSize: 1024
+      stepSize: 1024
+
+  Chords:
+    use: off
+    params:
+      ChordsSmoothing: 1.5s
+      ChordsUse7: 0
+      stepSize: 1024

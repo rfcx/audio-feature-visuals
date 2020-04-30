@@ -1,3 +1,7 @@
+import os
+import sys
+import json
+import logging.config
 import numpy as np
 
 
@@ -16,3 +20,14 @@ def gini(x):
 
 def moving_average(x, kernel, border):
     return np.convolve(x, np.ones(kernel), mode=border) / kernel
+
+
+def setup_logging():
+    path = os.path.join(os.path.dirname(__file__), 'logconfig.json')
+    try:
+        with open(path, 'rt') as f:
+            config = json.load(f)
+            logging.config.dictConfig(config)
+    except Exception as e:
+        logging.exception('Could not load logconfig.json. Where is the logconfig.json?')
+        sys.exit(1)
