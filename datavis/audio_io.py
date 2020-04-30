@@ -3,11 +3,33 @@ import re
 import glob
 import logging
 import pandas as pd
+from typing import Generator, Tuple
 from datetime import datetime
+from pathlib import Path, PosixPath
 
 
 class AudioIOException(Exception):
     pass
+
+
+def get_all_waves_generator(directory: str, resume: bool = False):
+    gen = Path(directory).rglob('*.wav')
+    if resume:
+        logging.info('Resuming processing')
+        wav_paths = list(gen)
+        all_paths = [os.path.splitext(path)[0] for path in wav_paths]
+        all_paths = set(all_paths)
+        csvs = list(Path(directory).rglob('*.csv'))
+        csvs = [os.path.splitext(path)[0] for path in csvs]
+        csvs = set(csvs)
+        paths = all_paths - csvs
+        paths = [path + '.wav' for path in paths]
+        total = len(paths)
+        logging.info('%d / %d completed. Remaining: %d', len(csvs), len(all_paths), total)
+    else:
+        total = sum(1 for _ in gen)
+        paths = Path(directory).rglob('*.wav')
+    return paths, total
 
 
 def get_all_waves(directory: str) -> list:
