@@ -7,34 +7,24 @@ import pandas as pd
 from multiprocessing import Process, Manager, Queue
 from joblib import Parallel, delayed
 from tqdm import tqdm
-from datavis.yaafe_wrapper import YaafeWrapper3
+from datavis.yaafe_wrapper import YaafeWrapper
 from datavis.bioacoustics import get_bioacoustic_features
 from datavis.audio_io import get_all_waves, get_all_waves_generator
 
 
-def save_to_file(q):
-    with open('failed.csv', 'w', buffering=0) as out:
-        while True:
-            val = q.get()
-            if val is None: break
-            out.write(val + '\n')
-
-
-def process_audio(path, config, error_message_queue: Queue):
+def process_audio(path, config):
     try:
         y, fs = librosa.load(path, sr=None)
     except Exception as ex:
         logging.exception('Failed to load %s', path)
-        error_message_queue.put(f'{str(ex)},Load,{path}')
         return
 
     try:
-        yaafe = YaafeWrapper3(fs=fs, config=config['Audio_features'])
+        yaafe = YaafeWrapper(fs=fs, config=config['Audio_features'])
         yaafe_features = yaafe.compute_feature_stats(y)
         bioacoustic_features = get_bioacoustic_features(y=y, fs=fs, config=config['Bioacoustic_features'])
     except Exception as ex:
         logging.exception('Failed to process %s', path)
-        error_message_queue.put(f'{str(ex)},Process,{path}')
         return
 
     output_path = os.path.splitext(path)[0] + '.csv'
@@ -46,23 +36,13 @@ def wav_dir_to_features(directory: str, config: str, n_jobs: int, resume: bool):
         config = yaml.load(f, Loader=yaml.FullLoader)
     files, total = get_all_waves_generator(directory=directory, resume=resume)
 
-    if total == 0:
-        logging.info()
-
-    manager = Manager()
-    error_message_queue = manager.Queue()
-    error_logging_process = Process(target=save_to_file, args=(error_message_queue,))
-    error_logging_process.start()
-
     if n_jobs == 1:
         for wav in tqdm(files):
             print(wav)
-            process_audio(path=wav, config=config, error_message_queue=error_message_queue)
+            process_audio(path=wav, config=config)
     else:
         _ = Parallel(n_jobs=n_jobs, backend='loky')(
-            delayed(process_audio)(path=path, config=config, error_message_queue=error_message_queue)
+            delayed(process_audio)(path=path, config=config)
             for path in tqdm(files, total=total))
 
-    error_message_queue.put(None)
-    error_logging_process.join()
 
