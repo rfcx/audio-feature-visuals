@@ -60,6 +60,11 @@ Bioacoustic_features:
       dB_range: 10
       N: 0
 
+  Formants:
+    use: on
+    params:
+      order: null
+
 Audio_features:
   Chroma2:
     use: on

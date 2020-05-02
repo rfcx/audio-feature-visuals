@@ -3,7 +3,9 @@ import re
 import glob
 import logging
 import pandas as pd
+from io import StringIO
 from typing import Generator, Tuple
+from joblib import Parallel, delayed
 from datetime import datetime
 from pathlib import Path, PosixPath
 
@@ -66,3 +68,40 @@ def get_date_range_from_directory(directory: str, periods: int) -> pd.DatetimeIn
     end = extract_datetime_from_filename(last_file)
     daterange = pd.date_range(start=start, end=end, periods=periods)
     return daterange
+
+
+def read_result_csv(path):
+    """
+    Assumes the result file has a header and a single line with results
+    :param path:
+    :return:
+    """
+    with open(path) as fo:
+        data = fo.readlines()[1]
+    filename = os.path.basename(path)
+    time = extract_datetime_from_filename(filename)
+    data = str(time) + ',' + data
+    return data
+
+
+def get_result_header(path):
+    with open(path) as fo:
+        return fo.readline()
+
+
+def read_results(directory: str) -> pd.DataFrame:
+    """
+    If reading this section makes you think "why not use pandas or dask read_csv?", answer is simple: processing
+    with these takes prohibitively long time, especially concat of results. By using StringIO we reduce the load time
+    over 100x for large datasets
+    :param directory:
+    :return:
+    """
+    csv_paths = list(Path(directory).rglob('*.csv'))
+    header = get_result_header(csv_paths[0])
+    data = Parallel(n_jobs=15, backend='loky')(delayed(read_result_csv)(path=path) for path in csv_paths)
+    data = header + ''.join(data)
+    data = StringIO(data)
+    data = pd.read_csv(data)
+    data.index = pd.to_datetime(data.index)
+    return data.sort_index()

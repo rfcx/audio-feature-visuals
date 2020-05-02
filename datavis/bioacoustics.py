@@ -162,6 +162,35 @@ def compute_acoustic_activity(y: np.ndarray, fs: int, config: dict):
     return d
 
 
+@toggle
+def get_formant_frequencies(y: np.ndarray, fs: int, config: dict) -> dict:
+    """
+    Formants are frequency peaks in the spectrum which have a high degree of energy.
+    See e.g. https://stackoverflow.com/questions/61519826/how-to-decide-filter-order-in-linear-prediction-coefficients-lpc-while-calcu/61528322#61528322
+    for explanation how order is selected.
+    :param y:
+    :param fs:
+    :param config:
+    :return:
+    """
+    order = config['params']['order']
+    if order is None:
+        order = fs // 1000
+    A = librosa.core.lpc(y, order)
+    rts = np.roots(A)
+    rts = rts[np.imag(rts) >= 0]
+    angz = np.arctan2(np.imag(rts), np.real(rts))
+    frqs = angz * fs / (2 * np.pi)
+    frqs.sort()
+
+    q25, q50, q75 = np.quantile(frqs, [0.25, 0.50, 0.75])
+    d = {'formant_q25': q25,
+         'formant_q50': q50,
+         'formant_q75': q75,
+         'formant_len': len(frqs)}
+    return d
+
+
 def get_yaafe_features(y: np.ndarray, fs: int, config: dict):
     yaafe = YaafeWrapper(fs=fs, config=config)
     features = yaafe.compute_feature_stats(y)
@@ -182,7 +211,11 @@ def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
         'Acoustic_events_count': AE['Count_acoustic_events'],
         'Event_average_duration': AE['Average_duration']
     }
+    formants = get_formant_frequencies(y=y, fs=fs, config=config['Formants'])
+    bioacoustic_features.update(formants)
     return bioacoustic_features
+
+
 
 
 if __name__ == '__main__':
