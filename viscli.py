@@ -16,12 +16,7 @@ def cli(quiet):
     """
     viscli is a command line program that extracts audio features
     """
-    format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    if quiet:
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=format)
-    else:
-        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=format)
-    setup_logging()
+    setup_logging(quiet)
 
 
 @cli.command('a2f', help='Audio to HDF5 features')

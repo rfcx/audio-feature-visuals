@@ -22,12 +22,14 @@ def moving_average(x, kernel, border):
     return np.convolve(x, np.ones(kernel), mode=border) / kernel
 
 
-def setup_logging():
+def setup_logging(quiet):
     path = os.path.join(os.path.dirname(__file__), 'logconfig.json')
     try:
         with open(path, 'rt') as f:
             config = json.load(f)
             logging.config.dictConfig(config)
+            if quiet:
+                logging.getLogger().setLevel(logging.ERROR)
     except Exception as e:
         logging.exception('Could not load logconfig.json. Where is the logconfig.json?')
         sys.exit(1)
