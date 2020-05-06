@@ -187,6 +187,7 @@ def get_formant_frequencies(y: np.ndarray, fs: int, config: dict) -> dict:
     d = {'formant_q25': q25,
          'formant_q50': q50,
          'formant_q75': q75,
+         'formant_IQR': q75 - q25,
          'formant_len': len(frqs)}
     return d
 
