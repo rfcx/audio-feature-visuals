@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import time
 import click
 import logging
@@ -19,22 +18,22 @@ def cli(quiet):
     setup_logging(quiet)
 
 
-@cli.command('a2f', help='Audio to HDF5 features')
-@click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to a directory with audio in WAV format.")
-@click.option("--output", "-out", type=click.STRING, help="Output file. If not present, the output will be written to "
-                                                          "separate files with the same signature as the original one" )
+@cli.command('a2f', help='Audio to Features. The script will calculate features per file and save the result next to '
+                         'the input file.')
+@click.option("--input", "-in", type=click.Path(exists=True), required=True,
+              help="Path to a directory with audio in WAV format.")
 @click.option("--jobs", "-j", type=click.INT, default=-1, help="Number of jobs to run. Defaults to all cores",
               show_default=True)
 @click.option("--config", "-c", type=click.Path(exists=True), default='datavis/config.yaml',
               help="File with configuration parameters for the algorithm.")
 @click.option('--resume', default=False, is_flag=True, help='Resume processing')
-def audio_to_features(input, output, jobs, config, resume):
+def audio_to_features(input, jobs, config, resume):
     start_time = time.time()
     wav_dir_to_features(directory=input, config=config, n_jobs=jobs, resume=resume)
     logging.info(f'Total time: {time.time() - start_time:.2f}s')
 
 
-@cli.command('f2i', help='HDF5 features to image')
+@cli.command('f2i', help='Features to Image')
 @click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to the directory with csv features.")
 @click.option("--output", "-out", type=click.STRING, required=True, help="Output file.")
 @click.option("--format", "-f", type=click.Choice(SUPPORTED_FORMATS), default="html", show_default=True)
