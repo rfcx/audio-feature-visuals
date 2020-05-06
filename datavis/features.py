@@ -36,7 +36,6 @@ def wav_dir_to_features(directory: str, config: str, n_jobs: int, resume: bool):
 
     if n_jobs == 1:
         for wav in tqdm(files):
-            print(wav)
             process_audio(path=wav, config=config)
     else:
         _ = Parallel(n_jobs=n_jobs, backend='loky')(
