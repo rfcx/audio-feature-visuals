@@ -81,7 +81,7 @@ Audio_features:
   LPC:
     use: off
     params:
-      LPCNbCoeffs: 2
+      LPCNbCoeffs: 12
       blockSize: 1024
       stepSize: 1024
 
