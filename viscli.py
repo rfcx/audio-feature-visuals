@@ -4,11 +4,11 @@ import sys
 import time
 import click
 import logging
-import pandas as pd
 from datavis.common import setup_logging
 from datavis.features import wav_dir_to_features
-from datavis.audio_io import get_date_range_from_directory
-from datavis.audio_vis import save_heatmap_with_datetime, SUPPORTED_FORMATS
+from datavis.audio_io import read_results
+from datavis.audio_vis import save_heatmap_with_datetime, SUPPORTED_FORMATS, save_corr_matrix
+
 
 @click.group()
 @click.option('--quiet', default=False, is_flag=True, help='Run in a silent mode')
@@ -40,20 +40,19 @@ def audio_to_features(input, output, jobs, config, resume):
 
 
 @cli.command('f2i', help='HDF5 features to image')
-@click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to a file with HDF5 features.")
-@click.option("--directory", "-d", type=click.Path(exists=True), required=True, help="Path to the directory with "
-              "audio files that were used to produce features. Datatime will be inferred from timestamps.")
+@click.option("--input", "-in", type=click.Path(exists=True), required=True, help="Path to the directory with csv features.")
 @click.option("--output", "-out", type=click.STRING, required=True, help="Output file.")
-@click.option("--format", "-f", type=click.Choice(SUPPORTED_FORMATS), default="html",
-              show_default=True)
-def features_to_image(input, directory, output, format):
-    df = pd.read_hdf(input, key='data')
-    daterange = get_date_range_from_directory(directory=directory, periods=len(df))
-    df['datetime'] = daterange
-    df = df.set_index('datetime')
-    df = df.resample('1T').mean()
+@click.option("--format", "-f", type=click.Choice(SUPPORTED_FORMATS), default="html", show_default=True)
+@click.option("--aggregation", "-agg", type=click.INT, help="Aggregation (in minutes) to apply on the data",
+              default=10, show_default=True)
+@click.option('--corr', type=click.STRING, help="Output path for plotting correlation matrix. ")
+def features_to_image(input, output, format, aggregation, corr):
+    df = read_results(directory=input)
+    df = df.resample(f'{aggregation}T').mean()
     df = (df - df.min()) / (df.max() - df.min())
     save_heatmap_with_datetime(df, output_path=output, dformat=format)
+    if corr:
+        save_corr_matrix(df, output_path=corr)
 
 
 if __name__ == '__main__':

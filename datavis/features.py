@@ -1,15 +1,13 @@
 import os
-import sys
 import logging
 import librosa
 import yaml
 import pandas as pd
-from multiprocessing import Process, Manager, Queue
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from datavis.yaafe_wrapper import YaafeWrapper
 from datavis.bioacoustics import get_bioacoustic_features
-from datavis.audio_io import get_all_waves, get_all_waves_generator
+from datavis.audio_io import get_all_waves_generator
 
 
 def process_audio(path, config):
