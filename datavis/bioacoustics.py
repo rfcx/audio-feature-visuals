@@ -1,11 +1,9 @@
-import yaml
 import librosa
 import numpy as np
 from functools import wraps
 from scipy.stats import entropy
 from datavis import spectral
 from datavis.common import gini, strided_array, moving_average
-from datavis.yaafe_wrapper import YaafeWrapper
 
 
 def toggle(f):
@@ -192,12 +190,6 @@ def get_formant_frequencies(y: np.ndarray, fs: int, config: dict) -> dict:
     return d
 
 
-def get_yaafe_features(y: np.ndarray, fs: int, config: dict):
-    yaafe = YaafeWrapper(fs=fs, config=config)
-    features = yaafe.compute_feature_stats(y)
-    return features
-
-
 def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
     AE = compute_acoustic_activity(y=y, fs=fs, config=config['Acoustic_activity'])
     bioacoustic_features = {
@@ -215,19 +207,6 @@ def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
     formants = get_formant_frequencies(y=y, fs=fs, config=config['Formants'])
     bioacoustic_features.update(formants)
     return bioacoustic_features
-
-
-
-
-if __name__ == '__main__':
-    yml_file = 'config.yaml'
-    with open(yml_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    sample_path = '/media/tracek/linux-data/client/rfcx/test/2020-02-25T05-45-06.587Z.wav'
-    sample, fs = librosa.load(sample_path, sr=None)
-    yaafe_features = get_yaafe_features(y=sample, fs=fs, config=config['Audio_features'])
-    bioacoustic_features = get_bioacoustic_features(y=sample, fs=fs, config=config['Bioacoustic_features'])
 
 
 

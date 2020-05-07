@@ -66,23 +66,26 @@ Usage: viscli.py f2i [OPTIONS]
   Features to Image
 
 Options:
-  -in, --input PATH               Path to a file with HDF5 features.
+  -in, --input PATH               Path to the directory with csv features.
                                   [required]
-  -d, --directory PATH            Path to the directory with audio files that
-                                  were used to produce features. Datatime will
-                                  be inferred from timestamps.  [required]
   -out, --output TEXT             Output file.  [required]
   -f, --format [html|png|webp|svg|pdf|eps]
                                   [default: html]
+  -agg, --aggregation INTEGER     Aggregation (in minutes) to apply on the
+                                  data  [default: 10]
+  --corr TEXT                     Output path for plotting correlation matrix.
   --help                          Show this message and exit.
 ```
 
-HTML allows interactive use of the plot. 
+HTML is the default one as it allows interaction with the plot. Passing optional `--corr` argument plots [Pearson correlation](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient) matrix. Example of such a plot made on site 6658c4fd3657 can be found [here](https://plotly.com/~tracewsl/390/#/) .
 
 
 ## Audio features
 
-Initial set of features that will be modified later.
+The audio features are defined in the [config file](datavis/config.yaml) and split in two groups:
+
+* Bioacoustic features
+* 
 
 ### YAAFE set
 
