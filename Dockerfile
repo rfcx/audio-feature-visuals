@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:4.8.2
 LABEL maintainer="Rainforest Connection <dev@rfcx.org>"
 
 COPY environment.yml /tmp/environment.yml
