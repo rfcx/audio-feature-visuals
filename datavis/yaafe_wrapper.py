@@ -3,27 +3,6 @@ import yaafelib
 from scipy.stats import median_absolute_deviation
 
 
-YAAFE_FEATURES = {
-    'Chroma': 'Chroma',
-    'LPC': 'Linear Predictor Coefficients',
-    'LSF': 'Line Spectral Frequency',
-    'MFCC': 'Mel-frequency cepstral coefficients',
-    'OBSI': 'Octave band signal intensity with triangular filter',
-    'PerceptualSharpness': 'Perceptual sharpness',
-    'PerceptualSpread': 'Perceptual spread',
-    'SpectralCrestFactorPerBand': 'Spectral crest factors',
-    'SpectralIrregularity': 'Spectral irregularity',
-    'SpectralDecrease': 'Spectral decrease',
-    'SpectralFlatness': 'Spectral flatness',
-    'SpectralFlux': 'Spectral flux',
-    'SpectralRolloff': 'Spectral rolloff',
-    'SpectralVariation': 'Spectral variation',
-    'SpectralSlope': 'Spectral slope',
-    'ZCR': 'Zero-crossing rate'
-
-}
-
-
 class YaafeWrapper(object):
     def __init__(self, fs: int, config: dict):
         yaafe_config = {}
