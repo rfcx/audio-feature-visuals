@@ -7,6 +7,11 @@ from datavis.common import gini, strided_array, moving_average
 
 
 def toggle(f):
+    """
+    Turn on / off execution of the function
+    :param f: function
+    :return: function or None
+    """
     @wraps(f)
     def wrapper(*args, **kwds):
         if kwds['config']['use']:
@@ -17,7 +22,22 @@ def toggle(f):
 
 
 @toggle
-def compute_acoustic_complexity_index(y, fs, config):
+def get_acoustic_complexity_index(y: np.ndarray, fs: int, config: dict) -> float:
+    """
+    The ACI is based on the "observation that many biotic sounds, such as bird songs, are characterized by an intrinsic
+    variability of intensities, while some types of human generated noise (such as car passing or airplane transit)
+    present very constant intensity values"
+
+    The results given are accumulative. Very long samples will return very large values for ACI.
+
+    Reference: Pieretti N, Farina A, Morri FD (2011) A new methodology to infer the singing activity of an avian
+    community: the Acoustic Complexity Index (ACI). Ecological Indicators, 11, 868-873.
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: Acoustic Complexity Index (ACI)
+    """
     aci_params = config['params']
     spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
@@ -31,7 +51,19 @@ def compute_acoustic_complexity_index(y, fs, config):
 
 
 @toggle
-def compute_acoustic_diversity_index(y, fs, config):
+def get_acoustic_diversity_index(y: np.ndarray, fs: int, config: dict) -> float:
+    """
+    The ADI is calculated by dividing the spectrogram into bins (default 10) and taking the proportion of the signals in
+    each bin above a threshold (default -50 dBFS). The ADI is the result of the Shannon index applied to these bins.
+
+    Reference: Villanueva-Rivera, L. J., B. C. Pijanowski, J. Doucette, and B. Pekin. 2011.
+    A primer of acoustic analysis for landscape ecologists. Landscape Ecology 26: 1233-1246.
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: Diversity Index (DI)
+    """
     adi_params = config['params']
     fs_max = min(adi_params['fs_max'], fs / 2)
     fs_step = adi_params['fs_step']
@@ -43,7 +75,21 @@ def compute_acoustic_diversity_index(y, fs, config):
 
 
 @toggle
-def compute_bioacoustic_index(y: np.ndarray, fs: int, config: dict):
+def get_bioacoustic_index(y: np.ndarray, fs: int, config: dict):
+    """
+    The Bioacoustic Index is calculated as the "area under each curve included all frequency bands associated with the
+    dB value that was greater than the minimum dB value for each curve. The area values are thus a function of both the
+    sound level and the number of frequency bands used by the avifauna"
+
+    Reference: Boelman NT, Asner GP, Hart PJ, Martin RE. 2007. Multi-trophic invasion resistance in Hawaii:
+    bioacoustics, field surveys, and airborne remote sensing. Ecological Applications 17: 2137-2144.
+
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: Bioacoustic Index (BI)
+    """
     bi_params = config['params']
     spec_params = config['spectrogram']
     fs_min = bi_params['fs_min']
@@ -65,7 +111,20 @@ def compute_bioacoustic_index(y: np.ndarray, fs: int, config: dict):
 
 
 @toggle
-def compute_spectral_entropy(y: np.ndarray, fs: int, config: dict) -> float:
+def get_spectral_entropy(y: np.ndarray, fs: int, config: dict) -> float:
+    """
+    Spectral Entropy (Shannon definition) of audio signal.
+    The Shannon spectral entropy of a noisy signal will tend towards 1 whereas the Shannon spectral entropy of a pure
+    tone signal will tend towards 0.
+
+    Reference: Han, NC, Muniandy SV, Dayou J (2011) Acoustic classification of Australian anurans based on hybrid
+    spectral-entropy approach. Applied Acoustics.
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: spectral entropy (SE)
+    """
     spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     N = spec.shape[0]
@@ -75,14 +134,15 @@ def compute_spectral_entropy(y: np.ndarray, fs: int, config: dict) -> float:
     return spectral_entropy
 
 
-def compute_temporal_entropy(y: np.ndarray, fs: int, config: dict) -> float:
+def get_temporal_entropy(y: np.ndarray, fs: int, config: dict) -> float:
     """
-     temporal entropy (H[t]), a measure of the temporal dispersal of acoustic energy within a recording,
-     has been shown to reflect the number of avian calls in a recording (Sueur, Pavoine et al. 2008).
-    :param y:
-    :param fs:
-    :param config:
-    :return:
+    Temporal entropy is a measure of the temporal dispersal of acoustic energy within a recording,
+    has been shown to reflect the number of avian calls in a recording (Sueur, Pavoine et al. 2008).
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: temporal entropy (TE)
     """
     envelope = spectral.envelope(sig=y)
     envelope /= np.sum(envelope)
@@ -92,7 +152,19 @@ def compute_temporal_entropy(y: np.ndarray, fs: int, config: dict) -> float:
 
 
 @toggle
-def compute_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> float:
+def get_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> float:
+    """
+    The AEI is calculated by dividing the spectrogram into bins (default 10) and taking the proportion of the signals
+    in each bin above a threshold (default -50 dBFS). The AEI is the result of the Gini index applied to these bins.
+
+    Reference: Villanueva-Rivera, L. J., B. C. Pijanowski, J. Doucette, and B. Pekin. 2011. A primer of acoustic
+    analysis for landscape ecologists. Landscape Ecology 26: 1233-1246.
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: Acoustic Evenness Index (AEI)
+    """
     aei_params = config['params']
     fs_max = min(aei_params['fs_max'], fs / 2)
     fs_step = aei_params['fs_step']
@@ -103,7 +175,16 @@ def compute_acoustic_evenness_index(y: np.ndarray, fs: int, config: dict) -> flo
 
 
 @toggle
-def compute_spectral_centroid(y: np.ndarray, fs: int, config: dict):
+def get_spectral_centroid(y: np.ndarray, fs: int, config: dict):
+    """
+    Compute the spectral centroid of an audio signal
+
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: spectral centroid (SC)
+    """
     spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     centroid = freq.dot(spec) / spec.sum(axis=0)
@@ -111,7 +192,31 @@ def compute_spectral_centroid(y: np.ndarray, fs: int, config: dict):
 
 
 @toggle
-def compute_acoustic_activity(y: np.ndarray, fs: int, config: dict):
+def get_acoustic_activity(y: np.ndarray, fs: int, config: dict) -> dict:
+    """
+
+    Compute the following:
+
+    Signal-to-noise ratio (SNR): the decibel difference between the maximum envelope amplitude in any minute segment
+    and the background noise.
+
+    Acoustic activity: the fraction of frames within a one minute segment where the signal envelope is more than 3 dB
+    above the level of background noise
+
+    Count of acoustic events: the number of times that the signal envelope crosses the 3 dB threshold
+
+    Average duration of acoustic events: an acoustic event is a portion of recordingwhich startswhen the signal envelope
+    crosses above the 3 dB threshold and ends when it crosses belowthe 3 dB threshold.
+
+    Reference: Towsey, Michael W. (2013) Noise removal from wave-forms and spectro- grams derived from natural recordings of
+    the environment. Towsey, Michael (2013), Noise Removal from Waveforms and Spectrograms Derived from Natural
+    Recordings of the Environment. Queensland University of Technology, Brisbane
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: dictionary with SNR, Acoustic_activity, Count_acoustic_events and Average_duration
+    """
     params = config['params']
 
     duration_s = len(y) / fs
@@ -166,10 +271,11 @@ def get_formant_frequencies(y: np.ndarray, fs: int, config: dict) -> dict:
     Formants are frequency peaks in the spectrum which have a high degree of energy.
     See e.g. https://stackoverflow.com/questions/61519826/how-to-decide-filter-order-in-linear-prediction-coefficients-lpc-while-calcu/61528322#61528322
     for explanation how order is selected.
-    :param y:
-    :param fs:
-    :param config:
-    :return:
+
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: dictionary with formants quartiles, IQR and number of formants
     """
     order = config['params']['order']
     if order is None:
@@ -191,14 +297,21 @@ def get_formant_frequencies(y: np.ndarray, fs: int, config: dict) -> dict:
 
 
 def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
-    AE = compute_acoustic_activity(y=y, fs=fs, config=config['Acoustic_activity'])
+    """
+    Compute all bioacustic features
+    :param y: mono audio
+    :param fs: sampling (in Hz)
+    :param config: config dictionary
+    :return: dictionary with all bioacustic features
+    """
+    AE = get_acoustic_activity(y=y, fs=fs, config=config['Acoustic_activity'])
     bioacoustic_features = {
-        'Acoustic_Complexity_Index': compute_acoustic_complexity_index(y=y, fs=fs, config=config['Acoustic_Complexity_Index']),
-        'Acoustic_Diversity_Index': compute_acoustic_diversity_index(y=y, fs=fs, config=config['Acoustic_Diversity_Index']),
-        'Bioacoustic_Index': compute_bioacoustic_index(y=y, fs=fs, config=config['Bioacoustic_Index']),
-        'Spectral_entropy': compute_spectral_entropy(y=y, fs=fs, config=config['Spectral_entropy']),
-        'Temporal_entropy': compute_temporal_entropy(y=y, fs=fs, config=config['Temporal_entropy']),
-        'Acoustic_Evenness_Index': compute_acoustic_evenness_index(y=y, fs=fs, config=config['Acoustic_Evenness_Index']),
+        'Acoustic_Complexity_Index': get_acoustic_complexity_index(y=y, fs=fs, config=config['Acoustic_Complexity_Index']),
+        'Acoustic_Diversity_Index': get_acoustic_diversity_index(y=y, fs=fs, config=config['Acoustic_Diversity_Index']),
+        'Bioacoustic_Index': get_bioacoustic_index(y=y, fs=fs, config=config['Bioacoustic_Index']),
+        'Spectral_entropy': get_spectral_entropy(y=y, fs=fs, config=config['Spectral_entropy']),
+        'Temporal_entropy': get_temporal_entropy(y=y, fs=fs, config=config['Temporal_entropy']),
+        'Acoustic_Evenness_Index': get_acoustic_evenness_index(y=y, fs=fs, config=config['Acoustic_Evenness_Index']),
         'SNR': AE['SNR'],
         'Acoustic_activity': AE['Acoustic_activity'],
         'Acoustic_events_count': AE['Count_acoustic_events'],
