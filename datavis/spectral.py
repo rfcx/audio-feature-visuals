@@ -39,14 +39,3 @@ def segmented_spectogram(y: np.ndarray, fs: int, fs_step: float, fs_max: float, 
 
     return spec_segmented_and_thresholded
 
-
-# def spectrogram(sig, fs, filename='', win_len=512, hop=256, win_type='hanning'):
-#     W = signal.get_window(win_type, win_len, fftbins=False)
-#     nyquist = fs // 2
-#
-#     t = np.arange(0, len(sig) - win_len + 1, hop)
-#     frames = [sig[i:i + win_len] * W for i in t]
-#     Sxx = [np.abs(np.fft.rfft(frame, win_len))[:win_len // 2] for frame in frames]
-#     Sxx = np.transpose(Sxx)
-#     frequencies = [e * nyquist / float(win_len / 2) for e in np.arange(win_len // 2)]
-#     return Sxx, frequencies
