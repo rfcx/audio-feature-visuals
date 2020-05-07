@@ -18,7 +18,7 @@ def process_audio(path, config):
         return
 
     try:
-        yaafe = YaafeWrapper(fs=fs, config=config['Audio_features'])
+        yaafe = YaafeWrapper(fs=fs, config=config['YAAFE_features'])
         yaafe_features = yaafe.compute_feature_stats(y)
         bioacoustic_features = get_bioacoustic_features(y=y, fs=fs, config=config['Bioacoustic_features'])
     except Exception as ex:

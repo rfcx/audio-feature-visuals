@@ -65,7 +65,7 @@ Bioacoustic_features:
     params:
       order: null
 
-Audio_features:
+YAAFE_features:
   Chroma2:
     use: on
     params:
