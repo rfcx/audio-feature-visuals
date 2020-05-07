@@ -56,6 +56,15 @@ Example:
 viscli.py a2f --input rfcx/sample_24h_tembe --jobs -2
 ```
 
+If the process was interrupted before all files were processed, you can resume it with `--resume` option like this:
+
+```
+./viscli.py a2f --input rfcx/97519ab33e08 -j 15 --resume
+2020-05-07 17:59:20,652 :: root :: INFO :: Resuming processing
+2020-05-07 17:59:31,238 :: root :: INFO :: 235944 / 309435 completed. Remaining: 73491
+ 0%|▏                                                | 255/73491 [00:29<2:23:40,  8.50it/s]
+```
+
 The script will process all WAV files present in `sample_24h_tembe`.
 
 ### Features to Image
