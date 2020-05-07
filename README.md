@@ -16,6 +16,20 @@ Use Anaconda for the best experience:
 conda env create --file=environment.yml --name rfcx
 ```
 
+### Docker
+
+First time (and any time the environment.yml changes), build the Docker image:
+
+```bash
+docker build -t data-visuals .
+```
+
+Then to run the CLI (from your local files):
+
+```bash
+docker run -it --rm -v ${PWD}:/app data-visuals viscli.py
+```
+
 ## CLI
 
 ```bash
