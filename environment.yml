@@ -7,21 +7,13 @@ dependencies:
   - aubio=0.4.9
   - librosa=0.7.2
   - pandas=1.0.1
-  - numpy=1.18.1
-  - xarray=0.15
   - joblib=0.14.1
   - matplotlib=3.2.0
-  - scikit-learn=0.22.1
   - scipy=1.4.1
-  - boto3=1.12.14
-  - umap-learn=0.3.10
-  - python-dotenv=0.12
   - click=7.0
-  - datashader=0.10.0
-  - testpath=0.3.1
-  - hdf5=1.10.2
-  - yaafe=0.70=py36h0bee7d0_1
-  - pytables=3.4.4
+  - yaafe=0.70
   - pip=20.0.2
   - plotly=4.7.0
   - tqdm=4.43
+  - pyyaml=5.3.1
+  - cachetools=3.1.1
