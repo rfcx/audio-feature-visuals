@@ -60,7 +60,7 @@ The script will process all WAV files present in `sample_24h_tembe`.
 
 ### Features to Image
 
-```bash
+```
 Usage: viscli.py f2i [OPTIONS]
 
   Features to Image
@@ -84,34 +84,55 @@ HTML is the default one as it allows interaction with the plot. Passing optional
 
 The audio features are defined in the [config file](datavis/config.yaml) and split in two groups:
 
-* Bioacoustic features
-* 
+* Bioacoustic features. These were implemented from respective papers and / or R packages, primarily [seewave](https://cran.r-project.org/package=seewave) and [soundecology](https://cran.r-project.org/package=soundecology) - both very popular in the community. The correctness of the implementation was verified by running two random samples on our and R code and checking that the relative difference is less than 1%. 
+* [YAAFE features](http://yaafe.sourceforge.net/). Yaafe is an audio features extraction toolbox implemented in C++. It's fast and smart, its author is a very good audio engineer. They have a separate category so that we can easily not only differentiate them from the bioacoustic features, but also add new features if needed simply by editing the config file. 
+
+To turn on / off calculation of the feature, change the `use` option on the config.
 
 ### YAAFE set
 
-Number of basic audio features are computed via [YAAFE](https://github.com/Yaafe/Yaafe) library. Features are explained in [docs](http://yaafe.sourceforge.net/features.html).
+Number of basic audio features are computed via [YAAFE](https://github.com/Yaafe/Yaafe) library. Features are explained in [docs](http://yaafe.github.io/Yaafe/features.html).
 
-* Chroma
-* Linear Predictor Coefficients
-* Line Spectral Frequency
-* Mel-frequency cepstral coefficients
-* Octave band signal intensity with triangular filter
-* Perceptual sharpness
-* Perceptual spread
-* Spectral crest factors
-* Spectral irregularity
-* Spectral decrease
-* Spectral flatness
-* Spectral flux
-* Spectral rolloff
-* Spectral variation
-* Spectral slope
-* Zero-crossing rate
+* **Chroma**. Describes pitch class profiles and nicely captures capture harmonic and melodic characteristics.
+* Linear Predictor Coefficients (LPC). Primarily used in speech processing, used to calculate [formants](https://en.wikipedia.org/wiki/Formant). It allows us to capture the main frequencies in the signal. 
+* **Line Spectral Frequency** (LSF).  LSFs have a very good quantization ability as well as they possess an efficiency in terms
+of representation. Closely related to LPC.
+* **Mel-frequency cepstral coefficients** (MFCC). Representation of the short-term power spectrum of a sound on a nonlinear mel scale of frequency.
+* **Octave band signal intensity ratio** (OBSIR). Computes log of ratio between consecutive octaves. 
+* **Perceptual sharpness**. The sharpness is a sensation value caused by high-frequency components in a signal.
+* **Perceptual spread**. Compute spread of loudness coefficients. Loudness is the psychological counterpart to sound pressure level. 
+* **Spectral crest factors**. Crest factor is a parameter of a waveform, such as alternating current or sound, showing the ratio of peak values to the effective value. They indicate how extreme the peaks are in a waveform.
+* **Spectral irregularity**. Deviation of the amplitude harmonic peaks from a global spectral envelope derived from a running mean of the amplitude of three adjacent harmonics averaged over the sound duration. 
+* **Spectral decrease**. Describes the average spectral slope, puts stronger emphasis on the low frequencies.
+* **Spectral flatness**. A low spectral flatness (approaching 0.0 for a pure tone) indicates that the spectral power is concentrated in a relatively small number of bands — this would typically sound like a mixture of sine waves, and the spectrum would appear "spiky". A high spectral flatness (approaching 1.0 for white noise) indicates that the spectrum has a similar amount of power in all spectral bands — this would sound similar to white noise, and the graph of the spectrum would appear relatively flat and smooth.
+* **Spectral flux**. A measure of how quickly the power spectrum of a signal is changing, calculated by comparing the power spectrum for one frame against the power spectrum from the previous frame.
+* **Spectral rolloff**. Spectral roll-off is the frequency so that 99% of the energy is contained below.
+* **Spectral variation**. Normalised correlation of spectrum between consecutive frames.
+* **Spectral slope**. Approximation of the spectrum shape by a linear regression line. 
+* **Zero-crossing rate**. Rate of sign-changes along a signal.
 
-## Handy commands
+#### How to extend YAAFE features set
 
-Merge all WAVE files into one:
+There's no need to change the code, just edit the config file. Let's say you would like to add `SpectralFlatnessPerBand`. From YAAFE docs:
 
-```bash
-sox $(find . -name '*.wav' | sort -n) combined.wav
+> yaafelib.yaafe_extensions.yaafefeatures.SpectralFlatnessPerBand
+Compute spectral flatness per log-spaced band of 1/4 octave, as proposed in MPEG7 standard.
+>
+> Parameters:
+>
+> FFTLength (default=0): Frame’s length on which perform FFT. Original frame is padded with zeros or truncated to reach this size. If 0 then use original frame length.
+> FFTWindow (default=Hanning): Weighting window to apply before fft. Hanning|Hamming|None
+> blockSize (default=1024): output frames size
+> stepSize (default=512): step between consecutive frames
+
+Add the following to the `config.yaml`:
+
 ```
+  SpectralFlatnessPerBand:
+    use: on
+    params:
+      blockSize: 2048
+```   
+
+Note that there is no need to add parameters that you are not changing.  
+
