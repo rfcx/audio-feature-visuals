@@ -144,8 +144,11 @@ Compute spectral flatness per log-spaced band of 1/4 octave, as proposed in MPEG
 > Parameters:
 >
 > FFTLength (default=0): Frame’s length on which perform FFT. Original frame is padded with zeros or truncated to reach this size. If 0 then use original frame length.
+>
 > FFTWindow (default=Hanning): Weighting window to apply before fft. Hanning|Hamming|None
+>
 > blockSize (default=1024): output frames size
+>
 > stepSize (default=512): step between consecutive frames
 
 Add the following to the `config.yaml`:
