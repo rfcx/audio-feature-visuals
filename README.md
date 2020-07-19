@@ -21,13 +21,13 @@ conda env create --file=environment.yml --name rfcx
 First time (and any time the environment.yml changes), build the Docker image:
 
 ```bash
-docker build -t data-visuals .
+docker build -t audio-feature-visuals .
 ```
 
 Then to run the CLI (from your local files):
 
 ```bash
-docker run -it --rm -v ${PWD}:/app data-visuals viscli.py
+docker run -it --rm -v ${PWD}:/app audio-feature-visuals viscli.py
 ```
 
 ## CLI
