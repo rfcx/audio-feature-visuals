@@ -86,7 +86,7 @@ YAAFE_features:
       stepSize: 1024
 
   LSF:
-    use: on
+    use: off
     params:
       blockSize: 1024
       stepSize: 1024
