@@ -1,0 +1,19 @@
+FROM centos:7
+
+RUN yum install -y epel-release && \
+    yum install -y wget
+
+WORKDIR /tmp
+RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+RUN bash /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda3
+COPY environment.yml /tmp/environment.yml
+RUN /miniconda3/bin/conda env create -n app --file /tmp/environment.yml
+RUN rm -f /tmp/*
+
+WORKDIR /app
+COPY viscli.py .
+COPY datavis datavis
+
+ENV LC_ALL=en_US.utf8 LANG=en_US.utf8
+
+ENTRYPOINT ["/miniconda3/bin/conda", "run", "-n", "app", "python"]
