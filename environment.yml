@@ -6,6 +6,7 @@ dependencies:
   - python=3.6.10
   - aubio=0.4.9
   - librosa=0.7.2
+  - numba=0.48.0
   - pandas=1.0.1
   - joblib=0.14.1
   - matplotlib=3.2.0
