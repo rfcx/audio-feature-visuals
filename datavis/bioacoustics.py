@@ -188,7 +188,7 @@ def get_spectral_centroid(y: np.ndarray, fs: int, config: dict):
     spec_params = config['spectrogram']
     spec, freq = spectral.spectrogram(sig=y, fs=fs, **spec_params)
     centroid = freq.dot(spec) / spec.sum(axis=0)
-    return centroid
+    return centroid  # Currently not returning the expected shape (hence commented below)
 
 
 @toggle
@@ -311,6 +311,7 @@ def get_bioacoustic_features(y: np.ndarray, fs: int, config: dict) -> dict:
         'Bioacoustic_Index': get_bioacoustic_index(y=y, fs=fs, config=config['Bioacoustic_Index']),
         'Spectral_entropy': get_spectral_entropy(y=y, fs=fs, config=config['Spectral_entropy']),
         'Temporal_entropy': get_temporal_entropy(y=y, fs=fs, config=config['Temporal_entropy']),
+        #'Spectral_centroid': get_spectral_centroid(y=y, fs=fs, config=config['Spectral_centroid']),
         'Acoustic_Evenness_Index': get_acoustic_evenness_index(y=y, fs=fs, config=config['Acoustic_Evenness_Index']),
         'SNR': AE['SNR'],
         'Acoustic_activity': AE['Acoustic_activity'],
